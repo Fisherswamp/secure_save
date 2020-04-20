@@ -1,8 +1,7 @@
-use sha2::{Sha256, Digest};
-use hex;
-use getrandom;
 use crate::data::UserInfo;
-
+use getrandom;
+use hex;
+use sha2::{Digest, Sha256};
 
 pub fn hash_and_salt(password: &String) -> UserInfo {
     let salt = generate_salt();
@@ -10,7 +9,8 @@ pub fn hash_and_salt(password: &String) -> UserInfo {
 }
 
 pub fn verify(password_to_check: &String, user_to_verify: &UserInfo) -> bool {
-    let computed_hash = hash_with_salt(password_to_check, &((*user_to_verify).salt)).hashed_password;
+    let computed_hash =
+        hash_with_salt(password_to_check, &((*user_to_verify).salt)).hashed_password;
     computed_hash == (*user_to_verify).hashed_password
 }
 
@@ -23,7 +23,7 @@ fn hash_with_salt(password: &String, salt: &String) -> UserInfo {
         hash = calculate_hash(&hash);
     }
     UserInfo {
-        hashed_password: hash.clone(),
+        hashed_password: hash,
         salt: salt.clone(),
     }
 }
@@ -37,13 +37,8 @@ fn calculate_hash(object_to_hash: &String) -> String {
 }
 
 fn generate_salt() -> String {
-    let salt_arr: &mut [u8] =  &mut[0u8; 16];
+    let salt_arr: &mut [u8] = &mut [0u8; 16];
     let status = getrandom::getrandom(salt_arr);
-    if status.is_ok() {
-        let salt_hex = hex::encode(salt_arr);
-        salt_hex
-    } else {
-        status.unwrap();
-        hex::encode(salt_arr)
-    }
+    status.unwrap();
+    hex::encode(salt_arr)
 }
