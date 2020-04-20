@@ -9,6 +9,11 @@ pub fn hash_and_salt(password: &String) -> UserInfo {
     hash_with_salt(password, &salt)
 }
 
+pub fn verify(password_to_check: &String, user_to_verify: &UserInfo) -> bool {
+    let computed_hash = hash_with_salt(password_to_check, &((*user_to_verify).salt)).hashed_password;
+    computed_hash == (*user_to_verify).hashed_password
+}
+
 fn hash_with_salt(password: &String, salt: &String) -> UserInfo {
     let mut salted_pass = password.clone();
     salted_pass.push_str(salt);
