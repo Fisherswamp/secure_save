@@ -1,18 +1,26 @@
 use sha2::{Sha256, Digest};
 use hex;
 use getrandom;
+use crate::data::UserInfo;
 
 
-pub fn hash_and_salt(password: &String) {
+pub fn hash_and_salt(password: &String) -> UserInfo {
     let salt = generate_salt();
+    hash_with_salt(password, &salt)
+}
+
+fn hash_with_salt(password: &String, salt: &String) -> UserInfo {
     let mut salted_pass = password.clone();
-    salted_pass.push_str(&salt);
+    salted_pass.push_str(salt);
     let mut hash = calculate_hash(&salted_pass);
     for _ in 0..100 {
-        hash.push_str(&salt);
+        hash.push_str(salt);
         hash = calculate_hash(&hash);
     }
-    println!("Hash is: {}, hashed with salt {}", hash, salt);
+    UserInfo {
+        hashed_password: hash.clone(),
+        salt: salt.clone(),
+    }
 }
 
 fn calculate_hash(object_to_hash: &String) -> String {
