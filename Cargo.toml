@@ -9,3 +9,4 @@ edition = "2018"
 [dependencies]
 sha2 = "*"
 hex = "*"
+rand = "0.5"

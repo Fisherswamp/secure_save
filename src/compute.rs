@@ -1,9 +1,13 @@
 use sha2::{Sha256, Digest};
 use hex;
+//use rand::prng::chacha;
 
 
 pub fn hash_and_salt(password: &String) {
-    let mut hash = calculate_hash(password);
+    let salt = "ree";
+    let mut salted_pass = password.clone();
+    salted_pass.push_str(&salt);
+    let mut hash = calculate_hash(&salted_pass);
     for _ in 0..7 {
         hash = calculate_hash(&hash);
     }
