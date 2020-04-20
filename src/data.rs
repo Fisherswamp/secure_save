@@ -7,6 +7,6 @@ pub struct UserInfo {
 
 impl fmt::Display for UserInfo {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Password: {}\nHash: {}", self.hashed_password, self.salt)
+        write!(f, "Password: {}\nSalt: {}", self.hashed_password, self.salt)
     }
 }
