@@ -9,4 +9,5 @@ edition = "2018"
 [dependencies]
 sha2 = "*"
 hex = "*"
-rand = "0.5"
+rust-argon2 = "0.8"
+getrandom = "0.1.14"
