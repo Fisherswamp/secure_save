@@ -9,5 +9,5 @@ edition = "2018"
 [dependencies]
 sha2 = "*"
 hex = "*"
-rust-argon2 = "0.8"
 getrandom = "0.1.14"
+blowfish = "0.4"
