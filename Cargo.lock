@@ -117,6 +117,7 @@ name = "secure_save"
 version = "0.1.0"
 dependencies = [
  "blowfish",
+ "byteorder",
  "getrandom",
  "hex",
  "sha2",

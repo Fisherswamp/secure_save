@@ -36,7 +36,7 @@ fn calculate_hash(object_to_hash: &String) -> String {
     string_hash
 }
 
-fn generate_salt() -> String {
+pub fn generate_salt() -> String {
     let salt_arr: &mut [u8] = &mut [0u8; 16];
     let status = getrandom::getrandom(salt_arr);
     status.unwrap();
