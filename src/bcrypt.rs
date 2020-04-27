@@ -1,16 +1,39 @@
 use blowfish::Blowfish;
-use byteorder::{BE};
+use base64;
+use std::collections::HashMap;
 use std::str;
+use crate::compute;
 
-pub fn bcrypt(cost: u8, salt: &[u8], password: &[u8]) {
+pub fn bcrypt(cost: u8, password: &String) -> String {
+	let salt = compute::generate_salt();
+	bcrypt_with_salt(cost, salt.as_bytes(), &password)
+}
+
+pub fn bcrypt_with_salt(cost: u8, salt: &[u8], password: &String) -> String {
+	let password_result = bcrypt_compute(cost, salt, &password.as_bytes());
+	let mut final_str = "$2$".to_string();
+	final_str.push_str(&cost.to_string());
+	final_str.push_str("$");
+	final_str.push_str(&u8_vec_to_radix_64(&salt.to_vec()));
+	final_str.push_str(&password_result);
+	final_str
+}
+
+fn bcrypt_compute(cost: u8, salt: &[u8], password: &[u8]) -> String {
     assert!(salt.len() == 16);
     assert!(!password.is_empty() && password.len() <= 72);
-	let state = ekc_blowfish_setup(cost, salt, password);
+	assert!(!password.contains(&0u8));
+	//null terminate password
+	let mut nt_pword: Vec<u8> = Vec::new();
+    nt_pword.extend_from_slice(password);
+	nt_pword.push(0);
+	//trunctuate password to 72
+	let truncated = if nt_pword.len() > 72 { &nt_pword[..72] } else { &nt_pword };
+	let state = ekc_blowfish_setup(cost, salt, truncated);
 	let ctext_string = "OrpheanBeholderScryDoubt".to_string();
 	//converting to 32 bit blocks, even tho algo calls for 64 bit blocks because of how blowfish encrypts
 	let mut ctext_blocks = string_to_b32_arr(ctext_string);
-	let mut output = [0u8; 24];
-	for block in 0..ctext_blocks.len() {
+	for block in 0..3 {
 		let index = block*2;
 		for _ in 0..64 {
 			let encrpted_vals = state.bc_encrypt(ctext_blocks[index], ctext_blocks[index+1]);
@@ -18,6 +41,25 @@ pub fn bcrypt(cost: u8, salt: &[u8], password: &[u8]) {
 			ctext_blocks[index + 1] = encrpted_vals.1;
 		}
 	}
+	u8_vec_to_radix_64(&b32_array_to_b8_vec(&ctext_blocks))
+}
+//I know this creates the map every time it is called, this is just a proof of concept anyways
+fn u8_vec_to_radix_64(vec: &Vec<u8>) -> String {
+	let bcrypt_base64_alphabet: Vec<char> = "./ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".chars().collect();
+	let regular_base64_alphabet: Vec<char> = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".chars().collect();
+	let mut conversion_map: HashMap<char, char> = HashMap::new();
+	let mut result = "".to_string();
+	for i in 0..64 {
+		conversion_map.insert(regular_base64_alphabet[i], bcrypt_base64_alphabet[i]);
+	}
+	let regular_64_of_input = base64::encode(vec);
+	for character in regular_64_of_input.chars() {
+		if character == '=' {
+			break;
+		}
+		result.push_str(&conversion_map.get(&character).unwrap().to_string());
+	}
+	result
 }
 
 fn string_to_b32_arr(string: String) -> [u32; 6] {
@@ -36,24 +78,26 @@ fn string_to_b32_arr(string: String) -> [u32; 6] {
 }
 
 fn b32_array_to_b8_vec(array: &[u32]) -> Vec<u8> {
-	let mut convertedVec = Vec::new(); 
+	let mut converted_vec = Vec::new(); 
 	for i in 0..array.len() {
 		for j in 0..4 {
-			//I know there's a more efficient way to do this, but it works so :P
-			let pieceToGrab: u8 = ((array[i] & ((1 << 8)-1) << (8*(3-j))) >> (8*(3-j))) as u8;
-			convertedVec.push(pieceToGrab);
+			//I know there's a more efficient way to do this, but I already did it this way
+			let piece_to_grab: u8 = ((array[i] >> (8*(3-j))) & ((1 << 8)-1)) as u8;
+			converted_vec.push(piece_to_grab);
 		}
 	}
-	convertedVec
+	converted_vec
 } 
 #[cfg(test)]
 #[test]
 fn test_conversions() {
-	let start_string = "OrpheanBeholderScryDoubt".to_string();
+	let start_string = "hello world".to_string();
 	let array_32 = string_to_b32_arr(start_string);
 	let vec_8 = b32_array_to_b8_vec(&array_32);
 	let string_back_at_it: String = str::from_utf8(&vec_8).unwrap().to_string();
 	println!("Result: {}", string_back_at_it);
+	let rust_b64 = u8_vec_to_radix_64(&"hello world".as_bytes().to_vec());
+	println!("Result b64 rust: {}", rust_b64);
 }
 
 fn ekc_blowfish_setup(cost: u8, salt: &[u8], password: &[u8]) -> Blowfish {
