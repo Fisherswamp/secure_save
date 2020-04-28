@@ -1,6 +1,9 @@
+#[macro_use]
+extern crate lazy_static;
 mod compute;
 mod data;
 mod bcrypt;
+mod tester;
 
 fn main() {
     let hashme: String = "Hello, world!".to_string();
