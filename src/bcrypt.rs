@@ -30,7 +30,7 @@ pub fn bcrypt(cost: u8, password: &str) -> String {
 pub fn bcrypt_with_salt(cost: u8, salt: &Vec<u8>, password: &str) -> String {
 	let password_result = bcrypt_compute(cost, salt, password.as_bytes());
 	let mut final_str = "$2y$".to_string();
-	final_str.push_str(&cost.to_string());
+	final_str.push_str(&format!("{:02}", cost));
 	final_str.push_str("$");
 	final_str.push_str(&u8_vec_to_radix_64(&salt));
 	final_str.push_str(&password_result);
@@ -39,7 +39,7 @@ pub fn bcrypt_with_salt(cost: u8, salt: &Vec<u8>, password: &str) -> String {
 
 fn bcrypt_compute(cost: u8, salt: &[u8], password: &[u8]) -> String {
     assert!(salt.len() == 16);
-    assert!(!password.is_empty() && password.len() <= 72);
+    assert!(!password.is_empty());
 	assert!(!password.contains(&0u8));
 	//null terminate password
 	let mut nt_pword: Vec<u8> = Vec::new();
@@ -81,7 +81,7 @@ fn u8_vec_to_radix_64(vec: &Vec<u8>) -> String {
 		}).collect()
 }
 
-pub fn radix_64_to_u8(bcrypt_b64: &String) -> Vec<u8>{
+pub fn radix_64_to_u8(bcrypt_b64: &str) -> Vec<u8>{
 	let mut regular_base64: String = bcrypt_b64.chars()
 		.map(|val| {
 			RADIX64_TO_BASE64.get(&val).unwrap()
