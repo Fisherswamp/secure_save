@@ -24,15 +24,15 @@ lazy_static! {
 
 pub fn bcrypt(cost: u8, password: &str) -> String {
 	let salt = compute::generate_salt();
-	bcrypt_with_salt(cost, &salt.as_bytes().to_vec(), password)
+	bcrypt_with_salt(cost, &salt.as_bytes(), password)
 }
 
-pub fn bcrypt_with_salt(cost: u8, salt: &Vec<u8>, password: &str) -> String {
+pub fn bcrypt_with_salt(cost: u8, salt: &[u8], password: &str) -> String {
 	let password_result = bcrypt_compute(cost, salt, password.as_bytes());
 	let mut final_str = "$2y$".to_string();
 	final_str.push_str(&format!("{:02}", cost));
 	final_str.push_str("$");
-	final_str.push_str(&u8_vec_to_radix_64(&salt));
+	final_str.push_str(&u8_vec_to_radix_64(&salt.to_vec()));
 	final_str.push_str(&password_result);
 	final_str
 }
@@ -99,7 +99,7 @@ fn string_to_b32_arr(string: String) -> [u32; 6] {
 	for i in 0..str_array.len() {
 		let index = i/4;
 		let bitshift_amt = 8*(3-(i%4));
-		text_blocks[index] = text_blocks[index] + ((str_array[i] as u32) << bitshift_amt);
+		text_blocks[index] += (str_array[i] as u32) << bitshift_amt;
 	}
 	text_blocks
 }
@@ -113,8 +113,7 @@ fn b32_array_to_b8_vec(array: &[u32]) -> Vec<u8> {
 		}
 	}
 	converted_vec
-} 
-
+}
 
 fn eks_blowfish_setup(cost: u8, salt: &[u8], password: &[u8]) -> Blowfish {
 	assert!(cost < 32);

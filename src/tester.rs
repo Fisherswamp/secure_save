@@ -1,3 +1,4 @@
+#![cfg(test)]
 use crate::{compute, bcrypt};
 use std::collections::HashMap;
 
